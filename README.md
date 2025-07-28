@@ -28,13 +28,15 @@ Backend sistem pelacakan status pesanan real-time seperti food delivery. Dibangu
 
 ---
 
-##Tech Stack
+## Tech Stack
 - Go (Gin)
 - PostgreSQL
 - GORM
 - Gorilla/WebSocket
 - JWT (golang-jwt)
 - godotenv
+
+---
 
 ```
 Struktur Folder
@@ -57,6 +59,7 @@ order-tracking
 ├── go.mod
 └── README.md
 ```
+---
 
 ### Setup Database
 1. Buat database PostgreSQL:
@@ -86,6 +89,8 @@ APP_PORT=8080
 ### Server jalan di:
 `http://localhost:8080`
 
+---
+
 ## Endpoint REST API
 #### Auth
 Register
@@ -109,6 +114,8 @@ Response:
 "status": "success",
 "data": { "token": "jwt_token" }
 }
+
+---
 
 ### Orders
 #### Buat Pesanan
@@ -134,6 +141,8 @@ Body:
 #### Histori Pesanan
 GET /api/v1/orders/history
 Authorization: Bearer <token>
+
+---
 
 ## WebSocket
 ### Endpoint:
@@ -162,6 +171,8 @@ Error:
 "status": "error",
 "error": "Unauthorized"
 }
+
+---
 
 ## Testing
 1. Register & login → dapatkan token JWT
