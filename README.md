@@ -1,137 +1,172 @@
-A real-time order tracking system built with Go, PostgreSQL, and WebSocket for instant status updates.
+# Real-time Order Tracking System
+Backend sistem pelacakan status pesanan real-time seperti food delivery. Dibangun dengan Go, Gin, GORM, WebSocket Gorilla, dan PostgreSQL.
 
-📌 Features
-User Management
+## Fitur Utama
+### User Management
+- Register
+- Login (JWT)
+- Role: user, admin/driver
+- Middleware JWT
 
-Registration & JWT Authentication
+### CRUD Pesanan
+- User buat pesanan
+- User lihat daftar pesanan
+- Admin/driver lihat semua pesanan
+- Admin/driver update status
 
-Role-based access (user, admin, driver)
+### Status Pesanan
+- Flow: Pending → Diproses → Dikirim → Selesai
+- Status update otomatis broadcast via WebSocket
 
-Order Tracking
+### WebSocket Tracking
+- Client subscribe ke order_id
+- Server broadcast update status ke semua subscriber
+- Jika offline, ambil status terbaru via REST
 
-Full CRUD operations
+### Riwayat Pesanan
+- Endpoint REST untuk histori status
 
-Status flow: Pending → Processing → Shipped → Completed
+---
 
-Real-time Updates
+##Tech Stack
+- Go (Gin)
+- PostgreSQL
+- GORM
+- Gorilla/WebSocket
+- JWT (golang-jwt)
+- godotenv
 
-WebSocket notifications
-
-Offline status recovery via REST API
-
-Order History
-
-Complete audit trail of status changes
-
-🚀 Getting Started
-Prerequisites
-Go 1.21+
-
-PostgreSQL 14+
-
-Git (optional)
-
-Installation
-Clone the repository:
-
-bash
-git clone https://github.com/yourusername/order-tracking.git
-cd order-tracking
-Set up environment variables:
-
-bash
-cp .env.example .env
-Install dependencies:
-
-bash
-go mod tidy
-Database Setup
-sql
-CREATE DATABASE order_tracking;
-\c order_tracking
-\i migrations/001_init.sql
-⚙️ Configuration
-Edit .env file:
-
-env
-DB_DSN=host=localhost user=postgres password=yourpassword dbname=order_tracking port=5432 sslmode=disable
-JWT_SECRET=verysecretkey
-🏗️ Project Structure
-text
-order-tracking/
-├── config/
+```
+Struktur Folder
+order-tracking
 ├── internal/
-│   ├── handler/
-│   ├── middleware/
-│   ├── model/
-│   ├── repository/
-│   ├── service/
-│   └── websocket/
-├── migrations/
+│   ├── model/
+│   ├── dto/
+│   ├── repository/
+│   ├── service/
+│   ├── handler/
+│   ├── websocket/
+│   └── middleware/
 ├── pkg/
-│   ├── response/
-│   └── utils/
+│   ├── utils/
+│   └── response/
+├── migrations/
+├── config.go
+├── main.go
+├── .env
 ├── go.mod
-├── go.sum
-└── main.go
-🌐 API Documentation
-Authentication
-Method	Endpoint	Body	Description
-POST	/api/register	{name, email, password}	Register new user
-POST	/api/login	{email, password}	Login and get JWT
-Orders
-Method	Endpoint	Role	Body	Description
-POST	/api/orders	user	{description}	Create new order
-GET	/api/orders	user	-	Get user's orders
-GET	/api/orders/:id	user	-	Get order details
-PUT	/api/orders/:id/status	admin/driver	{status}	Update order status
-GET	/api/admin/orders	admin/driver	-	Get all orders
-WebSocket
-text
-ws://localhost:8080/ws/orders/:id
-Headers:
+└── README.md
+```
 
-text
-Authorization: Bearer <JWT_TOKEN>
-Message Format:
+### Setup Database
+1. Buat database PostgreSQL:
+psql -U postgres -c "CREATE DATABASE order_tracking;"
+2. Jalankan file SQL migrasi di migrations/001_init.sql.
 
-json
+### Cara Menjalankan
+Clone project:
+`git clone https://github.com/username/real-time-order-tracking.git`
+cd real-time-order-tracking
+
+### Buat file .env:
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_NAME=order_tracking
+JWT_SECRET=your_secret
+APP_PORT=8080
+
+### Install dependency:
+`go mod tidy`
+
+### Jalankan server:
+`go run main.go`
+
+### Server jalan di:
+`http://localhost:8080`
+
+## Endpoint REST API
+#### Auth
+Register
+POST /api/register
+Request:
 {
-  "order_id": "1",
-  "status": "Shipped",
-  "updated_at": "2025-07-28T10:00:00Z"
+"name": "John",
+"email": "john@example.com",
+"password": "secret"
 }
-🧪 Testing
-Manual Testing
-Register a user:
 
-bash
-curl -X POST http://localhost:8080/api/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test User","email":"test@example.com","password":"password123"}'
-Login to get JWT:
+#### Login
+POST /api/login
+Request:
+{
+"email": "john@example.com",
+"password": "secret"
+}
+Response:
+{
+"status": "success",
+"data": { "token": "jwt_token" }
+}
 
-bash
-curl -X POST http://localhost:8080/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
-Create an order:
+### Orders
+#### Buat Pesanan
+POST /api/orders
+Authorization: Bearer <token>
+Body:
+{ "items": "Nasi Goreng, Es Teh" }
 
-bash
-curl -X POST http://localhost:8080/api/orders \
-  -H "Authorization: Bearer <JWT_TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{"description":"Nasi Goreng Special"}'
-Automated Tests
-bash
-go test ./...
-🐛 Troubleshooting
-Issue	Solution
-Invalid JWT Token	Check token expiration and secret key
-WebSocket not updating	Verify Hub broadcast logs
-Database connection failed	Check PostgreSQL service status
-🚢 Deployment
-Local Build
-bash
-go build -o order-tracking
-./order-tracking
+#### Lihat Pesanan User
+GET /api/orders
+Authorization: Bearer <token>
+
+#### Detail Pesanan
+GET /api/orders/:id
+Authorization: Bearer <token>
+
+#### Update Status Pesanan (Admin/Driver)
+PUT /api/orders/:id/status
+Authorization: Bearer <token>
+Body:
+{ "status": "Dikirim" }
+
+#### Histori Pesanan
+GET /api/v1/orders/history
+Authorization: Bearer <token>
+
+## WebSocket
+### Endpoint:
+GET /ws/orders/:id
+Contoh:
+ws://localhost:8080/ws/orders/1
+Jika status berubah, server broadcast:
+
+{
+"order_id": "1",
+"status": "Dikirim",
+"updated_at": "2025-07-28T10:00:00Z"
+}
+
+### Format Response
+Sukses:
+
+{
+"status": "success",
+"data": { ... }
+}
+
+Error:
+
+{
+"status": "error",
+"error": "Unauthorized"
+}
+
+## Testing
+1. Register & login → dapatkan token JWT
+2. Buat pesanan
+3. Update status sebagai admin/driver
+4. Pastikan client WebSocket menerima update real-time
+5. Jika client offline → login lagi → ambil status terbaru via REST
+
